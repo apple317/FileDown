@@ -9,4 +9,5 @@ public interface Download_State {
 	public static final int DOWNLOAD_DELE = 6;
 	public static final int DOWNLOAD_LIMIT = 7;
 	public static final int DOWNLOAD_ERROR = 8;
+	public static final int DOWNLOAD_NOSPACE = 9;
 }

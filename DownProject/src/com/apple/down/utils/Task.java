@@ -10,11 +10,6 @@ import java.net.URL;
 
 import android.os.Environment;
 import android.util.Log;
-import android.webkit.WebSettings;
-import android.webkit.WebSettings.LayoutAlgorithm;
-import android.webkit.WebSettings.PluginState;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 
 import com.apple.down.assit.DownLoadInfo;
 import com.apple.down.listener.Download_State;
@@ -45,16 +40,6 @@ public class Task implements Runnable {
 	public void run() {
 		if (DownloadManager.onCheckDown())
 			return;
-//		 if(CommonHelper.checkSDCard()){
-//			 long sdcardAvailable =
-//			 MachineInfo.getAvailableExternalMemorySize();
-//			 if(sdcardAvailable < totalBytes){
-//			 sdcardError = true;
-//			 if(listener != null) listener.downloadError(true);
-//			 Log.v("TAG", "totalBytes: " + totalBytes + " sdcardAvail:" +
-//			 sdcardAvailable);
-//			 return;
-//		 }
 		try {
 			URL httpUrl;
 			boolean sdcardError = false;
@@ -73,10 +58,18 @@ public class Task implements Runnable {
 					"Mozilla/5.0 (Windows; U; Windows NT 6.0; ru; rv:1.9.0.11) Gecko/2009060215 Firefox/3.0.11 (.NET CLR 3.5.30729)");
 			httpConn.getHeaderField(2);
 			httpConn.connect();
-			Log.i("ZYN","code--"+httpConn.getResponseCode());
 			if (httpConn.getResponseCode() == 200) {
 				boolean willInterupted = false;
 				totalBytes = httpConn.getContentLength();
+				info.downMsg="系统空间不足";
+				long sdcardAvailable = MachineInfo
+						.getAvailableExternalMemorySize();
+				if (sdcardAvailable < totalBytes) {
+					sdcardError = true;
+					DownloadManager.mInst.onReturnDownMsg(info, Download_State.DOWNLOAD_NOSPACE);
+					return;
+				}
+
 				long pre = System.currentTimeMillis();
 				long now;
 				if (info.state == Download_State.DOWNLOAD_DONE)
@@ -85,10 +78,8 @@ public class Task implements Runnable {
 				currentBytes += curdown;
 				InputStream is = httpConn.getInputStream();
 				BufferedInputStream bis = new BufferedInputStream(is);
-				String fileDir = Environment
-						.getExternalStorageDirectory()
-						+ "/"
-						+ DownloadManager.mcontext.getPackageName();
+				String fileDir = Environment.getExternalStorageDirectory()
+						+ "/" + DownloadManager.mcontext.getPackageName();
 				String filePath = fileDir + "/"
 						+ Md5GenUtils.generator(info.url) + "."
 						+ Md5GenUtils.resolve(info.url);
@@ -118,9 +109,9 @@ public class Task implements Runnable {
 						info.currentBytes = currentBytes;
 						if (now - pre > 800) {
 							info.downSpeed = ((currentBytes - info.currentBytes) / 800.0);
-							Log.i("ZYN","code--info.currentBytes"+info.currentBytes);
-							DownloadManager.mInst
-									.updateDownloadList(info);
+							Log.i("ZYN", "code--info.currentBytes"
+									+ info.currentBytes);
+							DownloadManager.mInst.updateDownloadList(info);
 							pre = now;
 						}
 					} else {
@@ -136,19 +127,22 @@ public class Task implements Runnable {
 				bis.close();
 				is.close();
 				out.close();
-//				if (!isRunning) {
-//					File outFile = new File(filePath);
-//					if (outFile.exists())
-//						outFile.delete();
-//				}
+				// if (!isRunning) {
+				// File outFile = new File(filePath);
+				// if (outFile.exists())
+				// outFile.delete();
+				// }
 			} else {
+				info.downMsg="当前网络部稳定,请重试！";
+				info.state=Download_State.DOWNLOAD_ERROR;
 				DownloadManager.mInst.deleteTaskQueue(info);
 				return;
 			}
 		} catch (IOException e) {
+			info.downMsg="当前网络部稳定,请重试！";
+			info.state=Download_State.DOWNLOAD_ERROR;
 			DownloadManager.mInst.deleteTaskQueue(info);
 			return;
 		}
-
 	}
 }
