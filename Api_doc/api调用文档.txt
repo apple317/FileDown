@@ -1,0 +1,56 @@
+1. 导入download（简称SDK）
+下载最新版sdk的zip包，解压将其中的download释放到本地目录，Eclipse用户右键您的工程根目录，选择Properties -> Java Build Path -> Libraries， 然后点击 Add External JARs... 选择指向download 的路径，点击OK，即导入成功。
+
+下载最新版SDK的zip包，将其中的libs 文件夹合并到本地工程libs子目录下。
+
+Eclipse用户右键工程根目录，选择Properties -> Java Build Path -> Libraries，然后点击Add External JARs... 选择指向jar的路径，点击OK，即导入成功。
+
+注意
+
+Eclipse ADT 17 以上版本用户，请在工程目录下建一个文件夹libs，把jar包直接拷贝到这个文件夹下，再在Eclipse里面刷新一下工程就好了。不要通过上述步骤手动添加jar包引用。 详情请参考Dealing with dependencies in Android projects.
+
+2. 配置 AndroidManifest.xml
+说明:
+<service android:name="com.apple.down.service.DownloadService" >
+        </service>
+
+
+ 
+
+3. 添加代码
+ 3.1初始化接口接入（Application中加入）：DownloadInterface.initDownService(this);
+ 3.2添加下载文件任务功能如下：
+     //下载实体类
+    DownLoadInfo info=new DownLoadInfo();
+	info.url=leagues.get(position).url;
+	//添加文件下载任务
+	DownloadInterface.addDownloadList(info);
+ 3.3注册监听文件下载功能如下：
+    DownloadInterface.addDownloadListener(new DownListener());
+	private class DownListener implements DownloadListener {
+		@Override
+		public void onAddDownload(DownLoadInfo info) {
+			// TODO Auto-generated method stub
+			Log.i("ZYN","DownListener--onAddDownload");
+		}
+		@Override
+		public void onUpdateDownload(DownLoadInfo info) {
+			// TODO Auto-generated method stub
+			Log.i("ZYN","DownListener--onUpdateDownload");
+		}
+
+		@Override
+		public void onDeleteDownload(DownLoadInfo info, int errorOccured) {
+			// TODO Auto-generated method stub
+			Log.i("ZYN","DownListener--onDeleteDownload");
+		}
+		@Override
+		public void onDownloadMessage(DownLoadInfo info, int downStatue) {
+			// TODO Auto-generated method stub
+			Log.i("ZYN","DownListener--onDownloadMessage");
+		}
+	}
+  3.4:下载文件删除功能如下：
+    DownLoadInfo info=new DownLoadInfo();
+	info.url=leagues.get(position).url;
+    DownloadInterface.deleteDownloadList(info);
